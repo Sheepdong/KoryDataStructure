@@ -1,11 +1,19 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #define _CRT_SECURE_NO_WARNINGS_
+#define MAX_NAME 10
+#define MAX_VERTICES 20
 #define FALSE 0
 #define TRUE 1
-#define MAX_VERTICES 20
-#define MAX_NAME 10
+
+
+typedef struct Node {
+	int vertex;
+	char name[MAX_NAME];
+	struct Node* link;
+} Node;
+Node* adjlist[MAX_VERTICES];
 
 typedef struct check {
 	int num;
@@ -14,95 +22,84 @@ typedef struct check {
 check visited_[MAX_VERTICES];
 short int visited[MAX_VERTICES];
 
-typedef struct Node {
-	int vertex;
-	char name[MAX_NAME];
-	struct Node* link;
-} Node;
-
-typedef struct Graph {
-	int n;
-	struct Node* adj_list[MAX_VERTICES];
-} Graph;
-
-typedef struct treenode {
-	int key;
-	struct treenode* leftchild;
-	struct treenode* rightchild;
-} treenode;
-
-int Token(Graph* g, char* s) {
-	for (int i = 0; i < g->n; i++) {
-		if (visited_[i].name == s)
+int Token(char* s) {
+	for (int i = 0; i < MAX_VERTICES; i++) {
+		if (!strcmp(visited_[i].name, s))
 			return i;
+		else continue;
 	}
-	return 0;
+	return -1;
 }
 
-void init(Graph* g) {
-	int v = 0;
-	g->n = 0;
-	for (v = 0; v < MAX_VERTICES; v++) {
-		g->adj_list[v] = NULL;
+void making_edge(char* s, char* t) {
+	int u = Token(s); int v = Token(t);
+	Node* node1 = (Node*)malloc(sizeof(Node));
+	Node* node2 = (Node*)malloc(sizeof(Node));
+	if (adjlist[u]->link != NULL) {
+		node1->vertex = v;
+		node1->link = NULL;
+		adjlist[u]->link = node1;
 	}
-}
-
-void making_vertex(Graph* g, int v) {
-	if (((g->n) + 1) > MAX_VERTICES) {
-		printf("overflow\n");
-		return;
+	else {
+		node1->vertex = v;
+		node1->link = adjlist[u]->link;
+		adjlist[u]->link = node1;
 	}
-	g->n++;
-}
-
-void making_edge(Graph* g, char* s, char* t) {
-	Node* node;
-	node = (Node*)malloc(sizeof(Node));
-	int u = Token(g, s);
-	int v = Token(g, t);
-	node->vertex = v;
-	node->link = g->adj_list[u];
-	g->adj_list[u] = node;
-}
-
-void dfs(Graph* g, int v) {
-	Node* w;
-	visited[v] = TRUE;
-	printf("%5d", v);
-	for (w = g->adj_list[v]; w; w = w->link) {
-		if (!visited[w->vertex])
-			dfs(g, w->vertex);
+	if (adjlist[v]->link != NULL) {
+		node2->vertex = u;
+		node2->link = NULL;
+		adjlist[v]->link = node2;
+	}
+	else {
+		node2->vertex = u;
+		node2->link = adjlist[v]->link;
+		adjlist[v]->link = node2;
 	}
 }
 
-char string_[MAX_NAME];
+void print_adjlist(int n) {
+	for (int i = 0; i < n; i++) {
+		Node* cur = adjlist[i];
+		printf("정점 %d의 인접리스트", i);
+		while (cur != NULL) {
+			printf("->%s", cur->name);
+			cur = cur->link;
+		}
+		printf("\n");
+	}
+}
 
 int main() {
-	Graph* graph;
-	graph = (Graph*)malloc(sizeof(Graph));
-	init(graph);
 	int num = 0;
 	char name[MAX_NAME];
 	char string[MAX_NAME];
 	char string_[MAX_NAME];
+	for (int i = 0; i < MAX_VERTICES; i++) {
+		adjlist[i] = (Node*)malloc(sizeof(Node));
+		adjlist[i]->link = NULL;
+	}
 	printf("도시 간 경로 평가 서비스에 오신 것을 환영합니다.\n");
 	printf("도시 수를 입력해 주세요.\n");
 	scanf("%d", &num);
 	printf("도시 이름을 입력해 주세요\n");
 	for (int i = 0; i < num; i++) {
-		scanf("%s ", name);
+		scanf("%s", name);
+		strcpy(adjlist[i]->name, name);
 		strcpy(visited_[i].name, name);
+		visited[i] = FALSE;
 	}
 	printf("도시 간 도로 구축 상황을 입력하세요.\n");
 	while (1) {
-		scanf("%s-%s\n", string, string_);
+		scanf("%s-%s", string, string_);
 		if (string[0] == '.' && string[1] == '\0') {
 			break;
 		}
-		if (Token(graph, string) || Token(graph, string_)) {
+		if (Token(string) == -1 || Token(string_) == -1) {
 			printf("도시 이름이 잘못 입력되었습니다.");
 			continue;
 		}
-		making_edge(graph, string, string_);
+		making_edge(string, string_);
 	}
+	print_adjlist(num);
+	return 0;
 }
