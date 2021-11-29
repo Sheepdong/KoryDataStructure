@@ -6,6 +6,7 @@
 #define MAX_VERTICES 20
 #define FALSE 0
 #define TRUE 1
+#define BAR "-"
 
 
 typedef struct Node {
@@ -16,7 +17,6 @@ typedef struct Node {
 Node* adjlist[MAX_VERTICES];
 
 typedef struct check {
-	int num;
 	char name[MAX_NAME];
 }check;
 check visited_[MAX_VERTICES];
@@ -35,26 +35,12 @@ void making_edge(char* s, char* t) {
 	int u = Token(s); int v = Token(t);
 	Node* node1 = (Node*)malloc(sizeof(Node));
 	Node* node2 = (Node*)malloc(sizeof(Node));
-	if (adjlist[u]->link != NULL) {
-		node1->vertex = v;
-		node1->link = NULL;
-		adjlist[u]->link = node1;
-	}
-	else {
-		node1->vertex = v;
-		node1->link = adjlist[u]->link;
-		adjlist[u]->link = node1;
-	}
-	if (adjlist[v]->link != NULL) {
-		node2->vertex = u;
-		node2->link = NULL;
-		adjlist[v]->link = node2;
-	}
-	else {
-		node2->vertex = u;
-		node2->link = adjlist[v]->link;
-		adjlist[v]->link = node2;
-	}
+	node1->vertex = v;
+	node1->link = adjlist[u];
+	adjlist[u] = node1;
+	node2->vertex = u;
+	node2->link = adjlist[v];
+	adjlist[v] = node2;
 }
 
 void print_adjlist(int n) {
@@ -62,18 +48,37 @@ void print_adjlist(int n) {
 		Node* cur = adjlist[i];
 		printf("정점 %d의 인접리스트", i);
 		while (cur != NULL) {
-			printf("->%s", cur->name);
+			printf("->%s", cur->vertex);
 			cur = cur->link;
 		}
 		printf("\n");
 	}
 }
 
+void dfs(int v) {
+	Node* w;
+	Node* cur;
+	visited[v] = TRUE;
+	printf("%5d", v);
+	for (w = adjlist[v]; w; w = w->link) {
+		if (!visited[w->vertex])
+			dfs(w->vertex);
+	}
+}
+
+void matching() {
+
+}
+
+
 int main() {
 	int num = 0;
 	char name[MAX_NAME];
-	char string[MAX_NAME];
-	char string_[MAX_NAME];
+	char token[2 * MAX_NAME + 1];
+	char string[MAX_NAME] = "";
+	char string_[MAX_NAME] = "";
+	check temp;
+
 	for (int i = 0; i < MAX_VERTICES; i++) {
 		adjlist[i] = (Node*)malloc(sizeof(Node));
 		adjlist[i]->link = NULL;
@@ -90,12 +95,18 @@ int main() {
 	}
 	printf("도시 간 도로 구축 상황을 입력하세요.\n");
 	while (1) {
-		scanf("%s-%s", string, string_);
-		if (string[0] == '.' && string[1] == '\0') {
+		scanf("%s", token);
+		if (token[0] == '.' && token[1] == '\0') {
 			break;
 		}
+		char* ptr;
+		ptr = strtok(token, BAR);
+		strcpy(string, ptr);
+		ptr = strtok(NULL, BAR);
+		strcpy(string_, ptr);
+		ptr = strtok(NULL, BAR);
 		if (Token(string) == -1 || Token(string_) == -1) {
-			printf("도시 이름이 잘못 입력되었습니다.");
+			printf("도시 이름이 잘못 입력되었습니다.\n");
 			continue;
 		}
 		making_edge(string, string_);
